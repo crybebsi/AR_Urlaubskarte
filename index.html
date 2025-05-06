@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://cdn.rawgit.com/jeromeetienne/ar.js/2.0.1/aframe/build/aframe-ar.min.js"></script>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+
+      #marker-download {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        background: rgba(255, 182, 193, 0.2); /* Pastellpink, transparent */
+        color: rgba(255, 105, 180, 0.8); /* Dunkleres Pink für die Schrift */
+        text-decoration: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: background 0.3s ease, color 0.3s ease, transform 0.3s ease;
+      }
+
+      #marker-download:hover {
+        background: rgba(255, 182, 193, 0.8); /* Intensiveres Pastellpink beim Hover */
+        color: rgba(255, 255, 255, 1); /* Weiße Schrift beim Hover */
+        transform: scale(1.1); /* Leichtes Vergrößern beim Hover */
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Marker-Download-Button -->
+    <a id="marker-download" href="pattern-marker.patt" download>Marker herunterladen</a>
+
+    <a-scene embedded arjs="debugUIEnabled: false; trackingMethod: best" vr-mode-ui="enabled: false">
+      <!-- Hello Kitty Sleepy in der Mitte -->
+      <a-marker type="pattern" url="pattern-marker.patt" id="marker">
+        <a-image src="hellokittysleepy.png" position="0 1.5 0" scale="1.5 1.5 1.5"></a-image>
+        <!-- Sterne werden dynamisch hinzugefügt -->
+      </a-marker>
+      <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+      const starCount = 50; // Anzahl der Sterne
+      const minDistance = 0.5; // Mindestabstand zwischen den Sternen
+
+      // Funktion, um zufällige Pastellfarben zu generieren
+      function getRandomPastelColor() {
+        const r = Math.floor(Math.random() * 127 + 128); // 128–255
+        const g = Math.floor(Math.random() * 127 + 128); // 128–255
+        const b = Math.floor(Math.random() * 127 + 128); // 128–255
+        return `rgb(${r}, ${g}, ${b})`;
+      }
+
+      // Funktion, um eine zufällige Position zu generieren, die den Mindestabstand einhält
+      function generatePosition(existingPositions) {
+        let position;
+        let isValid = false;
+
+        while (!isValid) {
+          const angle = Math.random() * 360; // Zufälliger Winkel
+          const radius = Math.random() * 2 + 1; // Abstand von Hello Kitty (1 bis 3)
+          const x = Math.cos(angle) * radius;
+          const z = Math.sin(angle) * radius;
+          const y = Math.random() * 2 + 1; // Höhe (1 bis 3)
+          position = { x, y, z };
+
+          // Überprüfen, ob der Abstand zu allen bestehenden Positionen groß genug ist
+          isValid = existingPositions.every((pos) => {
+            const distance = Math.sqrt(
+              Math.pow(pos.x - x, 2) +
+              Math.pow(pos.y - y, 2) +
+              Math.pow(pos.z - z, 2)
+            );
+            return distance >= minDistance;
+          });
+        }
+
+        return position;
+      }
+
+      // Funktion, um Sterne zu erstellen
+      function createStars() {
+        const marker = document.getElementById('marker');
+        const existingPositions = []; // Speichert die Positionen der bereits generierten Sterne
+
+        for (let i = 0; i < starCount; i++) {
+          const star = document.createElement('a-image');
+
+          // Zufällige Position der Sterne (um Hello Kitty herum)
+          const position = generatePosition(existingPositions);
+          existingPositions.push(position);
+
+          // Kleinere Größe der Sterne
+          const scale = Math.random() * 0.3 + 0.1; // 0.1 bis 0.4
+
+          // Zufällige Pastellfarbe
+          const color = getRandomPastelColor();
+
+          // Zufällige Dauer für die Animation
+          const duration = Math.random() * 2000 + 1000; // 1000 bis 3000 ms
+
+          // Stern-Attribute setzen
+          star.setAttribute('position', `${position.x} ${position.y} ${position.z}`);
+          star.setAttribute('scale', `${scale} ${scale} ${scale}`);
+          star.setAttribute('src', 'sternchen.png'); // Sternbild verwenden
+          star.setAttribute('transparent', 'true');
+          star.setAttribute('style', `filter: drop-shadow(0 0 5px ${color});`);
+
+          // Animation hinzufügen, um das Funkeln zu simulieren
+          star.setAttribute('animation', `property: opacity; to: 0.5; dur: ${duration}; dir: alternate; loop: true`);
+
+          // Stern zum Marker hinzufügen
+          marker.appendChild(star);
+        }
+      }
+
+      // Sterne erzeugen, wenn das Dokument geladen wird
+      window.onload = createStars;
+    </script>
+  </body>
+</html>
